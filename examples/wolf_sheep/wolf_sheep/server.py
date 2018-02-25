@@ -28,9 +28,12 @@ def wolf_sheep_portrayal(agent):
 
     elif type(agent) is GrassPatch:
         if agent.fully_grown:
-            portrayal["Color"] = ["#00FF00", "#00CC00", "#009900"]
+            portrayal["Color"] = "#00FF00"
         else:
-            portrayal["Color"] = ["#84e184", "#adebad", "#d6f5d6"]
+            portrayal["Color"] = "#d6f5d6"
+        #else:
+        #    verdancy = int( round( agent.countdown / ( agent.model.grass_regrowth_time / 3 ), 0 ) )
+        #    portrayal["Color"] = ["#00CC00", "#009900", "#84e184", "#adebad"][verdancy]
         portrayal["Shape"] = "rect"
         portrayal["Filled"] = "true"
         portrayal["Layer"] = 0
