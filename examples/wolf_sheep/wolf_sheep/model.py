@@ -24,8 +24,8 @@ class WolfSheepPredation(Model):
     Wolf-Sheep Predation Model
     '''
 
-    height = 20
     width = 20
+    height = 20
 
     initial_sheep = 100
     initial_wolves = 50
@@ -43,7 +43,7 @@ class WolfSheepPredation(Model):
 
     description = 'A model for simulating wolf and sheep (predator-prey) ecosystem modelling.'
 
-    def __init__(self, height=20, width=20,
+    def __init__(self, width=20, height=20,
                  initial_sheep=100, initial_wolves=50,
                  sheep_reproduce=0.04, wolf_reproduce=0.05,
                  wolf_gain_from_food=20,
@@ -64,8 +64,8 @@ class WolfSheepPredation(Model):
         '''
 
         # Set parameters
-        self.height = height
         self.width = width
+        self.height = height
         self.initial_sheep = initial_sheep
         self.initial_wolves = initial_wolves
         self.sheep_reproduce = sheep_reproduce
@@ -76,7 +76,7 @@ class WolfSheepPredation(Model):
         self.sheep_gain_from_food = sheep_gain_from_food
 
         self.schedule = RandomActivationByBreed(self)
-        self.grid = MultiGrid(self.height, self.width, torus=True)
+        self.grid = MultiGrid(self.width, self.height, torus=True)
         self.datacollector = DataCollector(
             {"Wolves": lambda m: m.schedule.get_breed_count(Wolf),
              "Sheep": lambda m: m.schedule.get_breed_count(Sheep)})
