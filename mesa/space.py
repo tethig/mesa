@@ -15,12 +15,12 @@ MultiGrid: extension to Grid where each cell is a set of objects.
 # pylint: disable=invalid-name
 
 import itertools
+
 import numpy as np
-import random
 
 
 def accept_tuple_argument(wrapped_function):
-    """ Decorator to allow grid methods that take a list of (x, y) position tuples
+    """ Decorator to allow grid methods that take a list of (x, y) coord tuples
     to also handle a single position, by automatically wrapping tuple in
     single-item list rather than forcing user to do it.
 
@@ -333,16 +333,24 @@ class Grid:
     def move_to_empty(self, agent):
         """ Moves agent to a random empty cell, vacating agent's old cell. """
         pos = agent.pos
-        new_pos = self.find_empty()
-        if new_pos is None:
+        if len(self.empties) == 0:
             raise Exception("ERROR: No empty cells")
-        else:
-            self._place_agent(new_pos, agent)
-            agent.pos = new_pos
-            self._remove_agent(pos, agent)
+        new_pos = agent.random.choice(self.empties)
+        self._place_agent(new_pos, agent)
+        agent.pos = new_pos
+        self._remove_agent(pos, agent)
 
     def find_empty(self):
         """ Pick a random empty cell. """
+        from warnings import warn
+        import random
+
+        warn(("`find_empty` is being phased out since it uses the global "
+              "`random` instead of the model-level random-number generator. "
+              "Consider replacing it with having a model or agent object "
+              "explicitly pick one of the grid's list of empty cells."),
+            DeprecationWarning)
+
         if self.exists_empty_cells():
             pos = random.choice(self.empties)
             return pos
@@ -379,9 +387,9 @@ class SingleGrid(Grid):
 
         """
         if x == "random" or y == "random":
-            coords = self.find_empty()
-            if coords is None:
+            if len(self.empties) == 0:
                 raise Exception("ERROR: Grid full")
+            coords = agent.random.choice(self.empties)
         else:
             coords = (x, y)
         agent.pos = coords
@@ -450,7 +458,8 @@ class MultiGrid(Grid):
 class HexGrid(Grid):
     """ Hexagonal Grid: Extends Grid to handle hexagonal neighbors.
 
-    Functions according to odd-q rules. See http://www.redblobgames.com/grids/hexagons/#coordinates for more
+    Functions according to odd-q rules.
+    See http://www.redblobgames.com/grids/hexagons/#coordinates for more.
 
     Properties:
         width, height: The grid's width and height.
@@ -512,7 +521,8 @@ class HexGrid(Grid):
 
             if self.torus is False:
                 adjacent = list(
-                    filter(lambda coords: not self.out_of_bounds(coords), adjacent))
+                    filter(lambda coords:
+                           not self.out_of_bounds(coords), adjacent))
             else:
                 adjacent = [torus_adj_2d(coord) for coord in adjacent]
 
@@ -599,7 +609,7 @@ class ContinuousSpace:
     """ Continuous space where each agent can have an arbitrary position.
 
     Assumes that all agents are point objects, and have a pos property storing
-    their position as an (x, y) tuple. This class uses a MultiGrid internally
+    their position as an (x, y) tuple. This class uses a numpy array internally
     to store agent objects, to speed up neighborhood lookups.
 
     """
@@ -614,11 +624,6 @@ class ContinuousSpace:
             x_min, y_min: (default 0) If provided, set the minimum x and y
                           coordinates for the space. Below them, values loop to
                           the other edge (if torus=True) or raise an exception.
-            grid_width, _height: (default 100) Determine the size of the
-                                 internal storage grid. More cells will slow
-                                 down movement, but speed up neighbor lookup.
-                                 Probably only fiddle with this if one or the
-                                 other is impacting your model's performance.
 
         """
         self.x_min = x_min
@@ -704,7 +709,7 @@ class ContinuousSpace:
             deltas = np.minimum(deltas, self.size - deltas)
         dists = deltas[:, 0] ** 2 + deltas[:, 1] ** 2
 
-        idxs, = np.where(dists <= radius**2)
+        idxs, = np.where(dists <= radius ** 2)
         neighbors = [self._index_to_agent[x] for x in idxs if include_center or dists[x] > 0]
         return neighbors
 
@@ -819,7 +824,7 @@ class NetworkGrid:
         return list(self.iter_cell_list_contents(cell_list))
 
     def get_all_cell_contents(self):
-        return list(self.iter_cell_list_contents(self.G.nodes()))
+        return list(self.iter_cell_list_contents(self.G))
 
     def iter_cell_list_contents(self, cell_list):
         list_of_lists = [self.G.node[node_id]['agent'] for node_id in cell_list if not self.is_cell_empty(node_id)]
